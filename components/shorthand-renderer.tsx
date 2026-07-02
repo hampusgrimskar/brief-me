@@ -9,6 +9,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import { Progress } from "@/components/ui/progress";
 import { SyntaxHighlighter } from "@/components/syntax-highlighter";
 import { DiffHighlighter } from "@/components/diff-highlighter";
+import { MermaidRenderer } from "@/components/mermaid-renderer";
 
 interface ShorthandRendererProps {
   section: ReportSection;
@@ -52,8 +53,17 @@ export function ShorthandRenderer({ section }: ShorthandRendererProps) {
   }
 
   if (section.type === "card") {
+    const variantStyles: Record<string, string> = {
+      default: "",
+      info: "border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20",
+      success: "border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/20",
+      warning: "border-yellow-200 bg-yellow-50/50 dark:border-yellow-800 dark:bg-yellow-950/20",
+      error: "border-red-200 bg-red-50/50 dark:border-red-800 dark:bg-red-950/20",
+    };
+    const style = variantStyles[section.variant || "default"] || "";
+
     return (
-      <Card>
+      <Card className={style}>
         <CardHeader>
           {section.title && <CardTitle>{section.title}</CardTitle>}
           {section.subtitle && <CardDescription>{section.subtitle}</CardDescription>}
@@ -193,6 +203,57 @@ export function ShorthandRenderer({ section }: ShorthandRendererProps) {
             {section.label && <span className="text-sm text-muted-foreground">{section.label}</span>}
           </div>
           <Progress value={section.value || 0} />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (section.type === "mermaid" && section.content) {
+    return (
+      <Card>
+        {section.title && (
+          <CardHeader>
+            <CardTitle>{section.title}</CardTitle>
+          </CardHeader>
+        )}
+        <CardContent>
+          <MermaidRenderer chart={section.content} />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (section.type === "steps" && section.steps) {
+    return (
+      <Card>
+        {section.title && (
+          <CardHeader>
+            <CardTitle>{section.title}</CardTitle>
+          </CardHeader>
+        )}
+        <CardContent>
+          <div className="relative">
+            {section.steps.map((step, i) => (
+              <div key={i} className="flex gap-4 pb-6 last:pb-0">
+                {/* Vertical line */}
+                <div className="flex flex-col items-center">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium">
+                    {i + 1}
+                  </div>
+                  {i < section.steps!.length - 1 && (
+                    <div className="w-px flex-1 bg-border mt-2" />
+                  )}
+                </div>
+                {/* Content */}
+                <div className="pt-1">
+                  <p className="font-medium">{step.title}</p>
+                  {step.description && (
+                    <p className="text-sm text-muted-foreground mt-0.5">{step.description}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
     );

@@ -155,7 +155,7 @@ export default function ReportPage() {
               );
             }
 
-            if (section.type === "table" || section.type === "card" || section.type === "info" || section.type === "code" || section.type === "diff" || section.type === "tabs" || section.type === "accordion" || section.type === "progress") {
+            if (section.type === "table" || section.type === "card" || section.type === "info" || section.type === "code" || section.type === "diff" || section.type === "tabs" || section.type === "accordion" || section.type === "progress" || section.type === "mermaid" || section.type === "steps") {
               return (
                 <div key={index} data-section-index={index}>
                   <ShorthandRenderer section={section} />

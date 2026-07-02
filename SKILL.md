@@ -20,11 +20,14 @@ Publish interactive reports to the user's local dashboard instead of dumping lon
    - Warnings / recommendations / conclusions → `info`
    - Source code / file contents → `code`
    - Code changes → `diff`
+   - Flow charts / architecture / sequences → `mermaid`
+   - Sequential processes / pipelines → `steps`
    - Related alternatives / variations → `tabs`
    - Detailed breakdowns / optional depth → `accordion`
    - Status / progress / metrics → `progress`
    - User choices → `decision`
    - Short connective text (1-2 sentences max) → `markdown`
+   - Use `variant` on cards/info for color: `info` (blue), `success` (green), `warning` (yellow), `error` (red)
 3. **Structure for scannability**: Aim for 3-8 sections per report. Each section conveys ONE idea. If a section exceeds 5 lines, split it.
 4. **Never use `markdown` for code, tables, or structured data**. Use the dedicated types instead. `markdown` is only for brief connective prose between components.
 5. **Never dump text in chat**: Use `publish_report` for all information. Only reply in chat with short confirmations (1-2 sentences).
@@ -130,6 +133,35 @@ Types: `single-select`, `multi-select`, `confirm`, `text`
 ```json
 {"type": "progress", "title": "Migration Progress", "label": "3/5 complete", "value": 60}
 ```
+
+### `mermaid` (use for flowcharts, sequence diagrams, architecture)
+```json
+{"type": "mermaid", "title": "Request Flow", "content": "graph LR\n  A[Client] --> B[API Gateway]\n  B --> C[Auth Service]\n  B --> D[Core Service]\n  D --> E[(Database)]"}
+```
+
+Supports all mermaid syntax: `graph`, `sequenceDiagram`, `classDiagram`, `stateDiagram`, `erDiagram`, `gantt`, `pie`, etc.
+
+### `steps` (use for sequential processes / pipelines)
+```json
+{"type": "steps", "title": "Request Pipeline", "steps": [
+  {"title": "validateRequestType", "description": "Checks incoming DIAMETER message type"},
+  {"title": "populateConsumptionHeader", "description": "Extracts subscriber and service data"},
+  {"title": "populateSessionRecords", "description": "Loads session state from cache"},
+  {"title": "routeToBackend", "description": "Sends to Core via AkkaBackend"}
+]}
+```
+
+### Color variants (for `card` and `info` types)
+
+Add `"variant"` to make sections visually distinct:
+```json
+{"type": "card", "variant": "success", "title": "Tests Passing", "content": "All 47 tests pass."}
+{"type": "card", "variant": "warning", "title": "Performance", "content": "Response time increased 20%."}
+{"type": "card", "variant": "error", "title": "Bug Found", "content": "NPE in production."}
+{"type": "card", "variant": "info", "title": "Note", "content": "This is FYI only."}
+```
+
+Variants: `default`, `info` (blue), `success` (green), `warning` (yellow), `error` (red)
 
 ### `markdown` (ONLY for 1-2 sentence connective text)
 ```json

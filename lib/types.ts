@@ -10,8 +10,8 @@ export interface Decision {
 }
 
 export interface ReportSection {
-  type: "markdown" | "jsx" | "decision" | "table" | "card" | "info" | "code" | "diff" | "tabs" | "accordion" | "progress";
-  content?: string; // for markdown, jsx, card, info, code, diff sections
+  type: "markdown" | "jsx" | "decision" | "table" | "card" | "info" | "code" | "diff" | "tabs" | "accordion" | "progress" | "mermaid" | "steps";
+  content?: string; // for markdown, jsx, card, info, code, diff, mermaid sections
   decision?: Decision; // for decision sections
   // table shorthand
   title?: string; // for table, card, info, code, diff, accordion items
@@ -27,6 +27,10 @@ export interface ReportSection {
   // progress shorthand
   value?: number; // 0-100
   label?: string;
+  // card/info variant for color
+  variant?: "default" | "info" | "success" | "warning" | "error";
+  // steps shorthand
+  steps?: { title: string; description?: string }[];
 }
 
 export interface Report {
