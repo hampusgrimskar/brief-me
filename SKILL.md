@@ -4,7 +4,7 @@ description: Publish rich, interactive reports to a local web dashboard for the 
 compatibility: Requires BriefMe server running at http://localhost:3000. Start with `briefme` CLI command. MCP server available via `briefme-mcp`.
 metadata:
   author: Hampus Grimskar
-  version: "0.2.0"
+  version: "0.3.0"
 ---
 
 # BriefMe
@@ -13,9 +13,39 @@ Publish interactive reports to the user's local dashboard instead of dumping lon
 
 ## CRITICAL RULES
 
-1. **Use the `publish_report` tool** to present information and collect decisions. It blocks until the user responds.
-2. **Never dump text in chat**: If you have structured information, comparisons, options, or follow-ups, use `publish_report`. Only use plain chat for short confirmations (1-2 sentences max).
-3. **After receiving a response**: If you have follow-up information or more decisions, call `publish_report` again. Do NOT write a wall of text summarizing what they chose.
+1. **NEVER write walls of text**. Break content into multiple short sections using the component types below. Each section should be scannable at a glance.
+2. **Use the right component for the content**:
+   - Comparisons / data → `table`
+   - Key findings / summaries / explanations → `card` (keep content to 2-4 lines)
+   - Warnings / recommendations / conclusions → `info`
+   - Source code / file contents → `code`
+   - Code changes → `diff`
+   - Related alternatives / variations → `tabs`
+   - Detailed breakdowns / optional depth → `accordion`
+   - Status / progress / metrics → `progress`
+   - User choices → `decision`
+   - Short connective text (1-2 sentences max) → `markdown`
+3. **Structure for scannability**: Aim for 3-8 sections per report. Each section conveys ONE idea. If a section exceeds 5 lines, split it.
+4. **Never use `markdown` for code, tables, or structured data**. Use the dedicated types instead. `markdown` is only for brief connective prose between components.
+5. **Never dump text in chat**: Use `publish_report` for all information. Only reply in chat with short confirmations (1-2 sentences).
+6. **After receiving a response**: Use `publish_report` or `update_report`. Do NOT write text in chat.
+
+### ❌ BAD — wall of text in one section:
+```json
+[
+  {"type": "markdown", "content": "## Analysis\n\nThe entry point is X which checks condition Y. Here's the code:\n```java\nswitch(x) { case A: ... }\n```\nThis means that Z happens because... [long explanation continues]"}
+]
+```
+
+### ✅ GOOD — structured, scannable, interactive:
+```json
+[
+  {"type": "card", "title": "Entry Point", "content": "ConvergedChargingService routes NON_PROVISIONED to AbandonSessionBridgeFlowAction"},
+  {"type": "code", "title": "determineChargingScenario()", "content": "switch (request.getChargingScenario()) {\n  case EXTERNAL: return EXTERNAL_KEY;\n  case INTERNAL: return INTERNAL_KEY;\n  default: throw new IllegalArgumentException(...);\n}"},
+  {"type": "info", "title": "Bug Found", "content": "NON_PROVISIONED hits the default case → throws IllegalArgumentException"},
+  {"type": "decision", "decision": {"id": "next", "type": "single-select", "label": "What to explore next?", "options": ["EXTERNAL path details", "Verify if this can trigger in production", "Done — this is sufficient"]}}
+]
+```
 
 ## MCP Tools
 
@@ -25,133 +55,105 @@ Publishes a report and waits. Returns the user's decisions when they click Respo
 
 ### `update_report` (revise and wait again)
 
-Updates an existing report with revised content. The report resets to pending and the tool blocks until the user responds to the new version. Use this after receiving inline comments to publish a revision.
+Updates an existing report with revised content. The report resets to pending and blocks until the user responds to the new version. Use after receiving inline comments.
 
 Requires: `reportId` (from the previous `publish_report` result) and new `sections`.
 
 ## Understanding the Response
-
-The response from `publish_report` and `update_report` includes:
 
 ```json
 {
   "reportId": "uuid",
   "decisions": [{"decisionId": "x", "value": "chosen option"}],
   "comments": [
-    {
-      "selectedText": "the text the user highlighted",
-      "comment": "their feedback on that specific part",
-      "sectionIndex": 2
-    }
+    {"selectedText": "text user highlighted", "comment": "their feedback", "sectionIndex": 2}
   ],
   "comment": "optional general comment",
   "respondedAt": "..."
 }
 ```
 
-### Inline comments
-
-Users can select any text in your report and press `c` to leave a comment on it. The `comments` array contains these. Each has:
-- `selectedText` — what they highlighted
-- `comment` — their feedback
-- `sectionIndex` — which section (0-indexed) it refers to
-
-**When you receive comments**: use `update_report` to revise the report addressing their feedback, then wait for their approval.
+**Inline comments**: Users select text and press `c` to comment. When you receive comments, use `update_report` to revise and address their feedback.
 
 ## Section Types
 
-### `table` (use for comparisons — compact)
-
+### `table`
 ```json
 {"type": "table", "title": "Options", "headers": ["Name", "Speed"], "rows": [["Express", "Good"], ["Hono", "Excellent"]]}
 ```
 
-### `card` (titled content block)
-
+### `card`
 ```json
-{"type": "card", "title": "Summary", "subtitle": "Optional subtitle", "content": "Text content here"}
+{"type": "card", "title": "Summary", "subtitle": "Optional subtitle", "content": "Short explanation (2-4 lines max)"}
 ```
 
-### `info` (callout/alert)
-
+### `info`
 ```json
 {"type": "info", "title": "Recommendation", "content": "Use Hono for performance."}
 ```
 
-### `code` (code blocks)
-
+### `code`
 ```json
 {"type": "code", "title": "src/index.ts", "content": "const app = new Hono();\napp.get('/', (c) => c.text('Hello'));"}
 ```
 
-### `diff` (unified diffs — renders like GitHub with green/red lines)
-
+### `diff`
 ```json
 {"type": "diff", "title": "src/users.ts", "content": "--- a/src/users.ts\n+++ b/src/users.ts\n@@ -1,3 +1,3 @@\n-function old() {\n+async function new() {\n   return data;\n }"}
 ```
 
-### `decision` (interactive choice — only in publish_report)
-
+### `decision`
+```json
+{"type": "decision", "decision": {"id": "x", "type": "single-select", "label": "Question?", "options": ["A", "B"]}}
+```
 Types: `single-select`, `multi-select`, `confirm`, `text`
 
+### `tabs` (use for related content the user can switch between)
 ```json
-{"type": "decision", "decision": {"id": "framework", "type": "single-select", "label": "Which framework?", "options": ["Express", "Hono"]}}
+{"type": "tabs", "title": "Implementation Options", "tabs": [
+  {"label": "Option A", "content": "Use a microservices architecture with event-driven communication."},
+  {"label": "Option B", "content": "Use a monolith with modular boundaries and shared database."},
+  {"label": "Option C", "content": "Use serverless functions with API Gateway."}
+]}
 ```
 
-### `markdown` (simple text)
-
+### `accordion` (use for expandable details — keeps report compact)
 ```json
-{"type": "markdown", "content": "Some **bold** text."}
+{"type": "accordion", "title": "Detailed Findings", "items": [
+  {"title": "Authentication Flow", "content": "The auth flow uses OAuth2 with PKCE..."},
+  {"title": "Database Schema", "content": "Three tables: users, sessions, tokens..."},
+  {"title": "API Endpoints", "content": "POST /login, POST /refresh, DELETE /logout"}
+]}
 ```
 
-### `jsx` (full control — use sparingly, high token cost)
+### `progress` (use for status/completion indicators)
+```json
+{"type": "progress", "title": "Migration Progress", "label": "3/5 complete", "value": 60}
+```
 
-Write raw JSX with shadcn components when shorthand types can't express what you need.
+### `markdown` (ONLY for 1-2 sentence connective text)
+```json
+{"type": "markdown", "content": "Based on the above, here are two options:"}
+```
 
-Available components:
+### `jsx` (use sparingly — high token cost)
 
-- **Layout:** `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`, `Separator`, `ScrollArea`, `Collapsible`, `CollapsibleTrigger`, `CollapsibleContent`
-- **Data:** `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`, `Badge`, `Avatar`, `AvatarImage`, `AvatarFallback`, `Progress`, `Skeleton`
-- **Feedback:** `Alert`, `AlertTitle`, `AlertDescription`, `Tooltip`, `TooltipTrigger`, `TooltipContent`, `TooltipProvider`, `HoverCard`, `HoverCardTrigger`, `HoverCardContent`
-- **Navigation:** `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`, `Breadcrumb`, `BreadcrumbList`, `BreadcrumbItem`, `BreadcrumbLink`, `BreadcrumbSeparator`, `BreadcrumbPage`, `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent`
-- **Overlays:** `Dialog`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `Popover`, `PopoverTrigger`, `PopoverContent`
-- **Form:** `Button`, `Label`, `Checkbox`, `RadioGroup`, `RadioGroupItem`, `Switch`, `Toggle`, `Textarea`
-- **HTML:** All standard elements (`p`, `h1`-`h6`, `strong`, `em`, `ul`, `li`, `code`, `pre`, `div`, `span`, etc.)
+Raw JSX with shadcn components. Only when shorthand types can't express what you need.
+
+Components: `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`, `Separator`, `ScrollArea`, `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`, `Badge`, `Alert`, `AlertTitle`, `AlertDescription`, `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`, `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent`, `Progress`, `Button`, `Label`, `Checkbox`, `RadioGroup`, `RadioGroupItem`, `Switch`, `Toggle`, `Textarea`, `Dialog`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `Popover`, `PopoverTrigger`, `PopoverContent`, `Avatar`, `AvatarImage`, `AvatarFallback`, `Tooltip`, `TooltipTrigger`, `TooltipContent`, `TooltipProvider`, `HoverCard`, `HoverCardTrigger`, `HoverCardContent`, `Collapsible`, `CollapsibleTrigger`, `CollapsibleContent`, `Breadcrumb`, `BreadcrumbList`, `BreadcrumbItem`, `BreadcrumbLink`, `BreadcrumbSeparator`, `BreadcrumbPage`, `Skeleton`
 
 ## MCP Server Setup
 
-Add to your agent's MCP config:
-
 ```json
-{
-  "mcpServers": {
-    "briefme": {
-      "command": "briefme-mcp"
-    }
-  }
-}
+{"mcpServers": {"briefme": {"command": "briefme-mcp"}}}
 ```
 
-## Tips
-
-1. Prefer `table`, `card`, `info`, `code`, `diff` — they use far fewer tokens than `jsx`.
-2. Only use `jsx` for complex layouts that shorthand can't handle.
-3. After getting a response, publish another report for follow-ups.
-4. Keep decisions focused — one clear question per decision.
-5. Use `summary` — it appears in the dashboard list so the user can prioritize.
-
-## Shell Fallback (if MCP is not available)
+## Shell Fallback (if MCP not available)
 
 ```bash
 PIPE="/tmp/briefme-$$" && mkfifo "$PIPE" && \
 curl -s -X POST http://localhost:3000/api/reports \
   -H "Content-Type: application/json" \
-  -d '{
-    "title": "Report Title",
-    "summary": "Summary",
-    "agent": "Agent",
-    "callbackPipe": "'"$PIPE"'",
-    "sections": [...]
-  }' && \
+  -d '{"title": "...", "callbackPipe": "'"$PIPE"'", "sections": [...]}' && \
 cat "$PIPE" && rm "$PIPE"
 ```

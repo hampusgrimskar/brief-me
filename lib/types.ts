@@ -10,16 +10,23 @@ export interface Decision {
 }
 
 export interface ReportSection {
-  type: "markdown" | "jsx" | "decision" | "table" | "card" | "info" | "code" | "diff";
+  type: "markdown" | "jsx" | "decision" | "table" | "card" | "info" | "code" | "diff" | "tabs" | "accordion" | "progress";
   content?: string; // for markdown, jsx, card, info, code, diff sections
   decision?: Decision; // for decision sections
   // table shorthand
-  title?: string; // for table, card, info, code, diff
+  title?: string; // for table, card, info, code, diff, accordion items
   subtitle?: string; // for card
   headers?: string[]; // for table
   rows?: string[][]; // for table
   // code shorthand
   language?: string; // for code
+  // tabs shorthand
+  tabs?: { label: string; content: string }[];
+  // accordion shorthand
+  items?: { title: string; content: string }[];
+  // progress shorthand
+  value?: number; // 0-100
+  label?: string;
 }
 
 export interface Report {

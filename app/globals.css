@@ -129,3 +129,33 @@
     @apply font-sans;
   }
 }
+
+@layer components {
+  .prose code {
+    @apply bg-muted px-1.5 py-0.5 rounded text-sm font-mono;
+  }
+  .prose pre {
+    @apply bg-muted rounded-lg p-4 overflow-x-auto;
+  }
+  .prose pre code {
+    @apply bg-transparent px-0 py-0 rounded-none;
+  }
+  .prose h2 {
+    @apply text-xl font-bold mt-8 mb-3;
+  }
+  .prose h3 {
+    @apply text-lg font-semibold mt-6 mb-2;
+  }
+  .prose p {
+    @apply mb-3;
+  }
+  .prose ul, .prose ol {
+    @apply mb-3 pl-6;
+  }
+  .prose li {
+    @apply mb-1;
+  }
+  .prose blockquote {
+    @apply border-l-4 border-muted-foreground/30 pl-4 italic text-muted-foreground;
+  }
+}

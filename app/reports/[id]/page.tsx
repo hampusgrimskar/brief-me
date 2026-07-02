@@ -110,7 +110,7 @@ export default function ReportPage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-3xl">
+      <main className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">{report.title}</h1>
           <p className="text-sm text-muted-foreground">
@@ -155,7 +155,7 @@ export default function ReportPage() {
               );
             }
 
-            if (section.type === "table" || section.type === "card" || section.type === "info" || section.type === "code" || section.type === "diff") {
+            if (section.type === "table" || section.type === "card" || section.type === "info" || section.type === "code" || section.type === "diff" || section.type === "tabs" || section.type === "accordion" || section.type === "progress") {
               return (
                 <div key={index} data-section-index={index}>
                   <ShorthandRenderer section={section} />
