@@ -1,9 +1,10 @@
 "use client";
 
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { ReportSection } from "@/lib/types";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { Progress } from "@/components/ui/progress";
@@ -54,13 +55,14 @@ export function ShorthandRenderer({ section }: ShorthandRendererProps) {
 
   if (section.type === "card") {
     const variantStyles: Record<string, string> = {
-      default: "",
-      info: "border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20",
+      default: "border-blue-200 bg-blue-50/30 dark:border-blue-800 dark:bg-blue-950/20",
+      info: "border-blue-200 bg-blue-50/30 dark:border-blue-800 dark:bg-blue-950/20",
       success: "border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/20",
       warning: "border-yellow-200 bg-yellow-50/50 dark:border-yellow-800 dark:bg-yellow-950/20",
       error: "border-red-200 bg-red-50/50 dark:border-red-800 dark:bg-red-950/20",
+      critical: "border-orange-300 bg-orange-50/60 dark:border-orange-700 dark:bg-orange-950/30",
     };
-    const style = variantStyles[section.variant || "default"] || "";
+    const style = variantStyles[section.variant || "default"] || variantStyles.default;
 
     return (
       <Card className={style}>
@@ -70,7 +72,11 @@ export function ShorthandRenderer({ section }: ShorthandRendererProps) {
         </CardHeader>
         {section.content && (
           <CardContent>
-            <div className="whitespace-pre-wrap">{section.content}</div>
+            <div className="prose prose-sm prose-neutral dark:prose-invert max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {section.content}
+              </ReactMarkdown>
+            </div>
           </CardContent>
         )}
       </Card>
@@ -78,11 +84,27 @@ export function ShorthandRenderer({ section }: ShorthandRendererProps) {
   }
 
   if (section.type === "info") {
+    const variantStyles: Record<string, string> = {
+      default: "border-blue-200 bg-blue-50/30 dark:border-blue-800 dark:bg-blue-950/20",
+      info: "border-blue-200 bg-blue-50/30 dark:border-blue-800 dark:bg-blue-950/20",
+      success: "border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/20",
+      warning: "border-yellow-200 bg-yellow-50/50 dark:border-yellow-800 dark:bg-yellow-950/20",
+      error: "border-red-200 bg-red-50/50 dark:border-red-800 dark:bg-red-950/20",
+      critical: "border-orange-300 bg-orange-50/60 dark:border-orange-700 dark:bg-orange-950/30",
+    };
+    const style = variantStyles[section.variant || "default"] || variantStyles.default;
+
     return (
-      <Alert>
-        {section.title && <AlertTitle>{section.title}</AlertTitle>}
-        {section.content && <AlertDescription>{section.content}</AlertDescription>}
-      </Alert>
+      <div className={`rounded-lg border p-4 ${style}`}>
+        {section.title && <p className="font-semibold mb-1">{section.title}</p>}
+        {section.content && (
+          <div className="prose prose-sm prose-neutral dark:prose-invert max-w-none">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {section.content}
+            </ReactMarkdown>
+          </div>
+        )}
+      </div>
     );
   }
 

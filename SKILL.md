@@ -26,10 +26,9 @@ Publish interactive reports to the user's local dashboard instead of dumping lon
    - Detailed breakdowns / optional depth → `accordion`
    - Status / progress / metrics → `progress`
    - User choices → `decision`
-   - Short connective text (1-2 sentences max) → `markdown`
    - Use `variant` on cards/info for color: `info` (blue), `success` (green), `warning` (yellow), `error` (red)
 3. **Structure for scannability**: Aim for 3-8 sections per report. Each section conveys ONE idea. If a section exceeds 5 lines, split it.
-4. **Never use `markdown` for code, tables, or structured data**. Use the dedicated types instead. `markdown` is only for brief connective prose between components.
+4. **NEVER use `markdown` type**. Always use the structured types (`card`, `info`, `code`, `table`, etc.). If you need connective text, use a `card` with no title.
 5. **Never dump text in chat**: Use `publish_report` for all information. Only reply in chat with short confirmations (1-2 sentences).
 6. **After receiving a response**: Use `publish_report` or `update_report`. Do NOT write text in chat.
 
@@ -153,20 +152,21 @@ Supports all mermaid syntax: `graph`, `sequenceDiagram`, `classDiagram`, `stateD
 
 ### Color variants (for `card` and `info` types)
 
-Add `"variant"` to make sections visually distinct:
+Tag sections by review importance — directs the user's eyes to what matters most:
 ```json
-{"type": "card", "variant": "success", "title": "Tests Passing", "content": "All 47 tests pass."}
-{"type": "card", "variant": "warning", "title": "Performance", "content": "Response time increased 20%."}
-{"type": "card", "variant": "error", "title": "Bug Found", "content": "NPE in production."}
-{"type": "card", "variant": "info", "title": "Note", "content": "This is FYI only."}
+{"type": "card", "variant": "critical", "title": "Uncertain — Needs Review", "content": "This assumption is unverified."}
+{"type": "card", "variant": "warning", "title": "Should Review", "content": "Logic looks right but edge cases exist."}
+{"type": "card", "variant": "info", "title": "Optional Context", "content": "Background info, FYI only."}
+{"type": "card", "variant": "success", "title": "Verified", "content": "Confirmed correct via tests."}
+{"type": "card", "variant": "error", "title": "Proven Wrong", "content": "This assumption is incorrect."}
 ```
 
-Variants: `default`, `info` (blue), `success` (green), `warning` (yellow), `error` (red)
-
-### `markdown` (ONLY for 1-2 sentence connective text)
-```json
-{"type": "markdown", "content": "Based on the above, here are two options:"}
-```
+Variants:
+- `critical` (orange) — uncertain, absolutely must review
+- `warning` (yellow) — should review, may have issues
+- `info` / `default` (blue) — optional context, background info
+- `success` (green) — verified correct, proven
+- `error` (red) — proven wrong, incorrect
 
 ### `jsx` (use sparingly — high token cost)
 

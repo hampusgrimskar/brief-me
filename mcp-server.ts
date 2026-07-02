@@ -92,7 +92,7 @@ server.tool(
       steps: z.array(z.object({ title: z.string(), description: z.string().optional() })).optional().describe("Steps (for steps type)"),
       value: z.number().optional().describe("Progress value 0-100 (for progress type)"),
       label: z.string().optional().describe("Progress label (for progress type)"),
-      variant: z.enum(["default", "info", "success", "warning", "error"]).optional().describe("Color variant (for card/info)"),
+      variant: z.enum(["default", "info", "success", "warning", "error", "critical"]).optional().describe("Color variant (for card/info)"),
       decision: z.object({
         id: z.string().describe("Unique decision ID"),
         type: z.enum(["single-select", "multi-select", "confirm", "text"]).describe("Decision type"),

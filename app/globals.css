@@ -158,4 +158,14 @@
   .prose blockquote {
     @apply border-l-4 border-muted-foreground/30 pl-4 italic text-muted-foreground;
   }
+  /* Tighter tables */
+  [data-slot="table"] {
+    @apply text-sm;
+  }
+  [data-slot="table-cell"] {
+    @apply py-2.5 px-3 align-top;
+  }
+  [data-slot="table-head"] {
+    @apply py-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground;
+  }
 }

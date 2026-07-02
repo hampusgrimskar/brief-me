@@ -28,7 +28,7 @@ export interface ReportSection {
   value?: number; // 0-100
   label?: string;
   // card/info variant for color
-  variant?: "default" | "info" | "success" | "warning" | "error";
+  variant?: "default" | "info" | "success" | "warning" | "error" | "critical";
   // steps shorthand
   steps?: { title: string; description?: string }[];
 }
